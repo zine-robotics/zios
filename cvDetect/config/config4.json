@@ -1,0 +1,36 @@
+{
+    "boundary": [
+      {
+        "color": "red",
+        "shape" : "rectangle",
+        "tags": "boundary1",
+        "id": 1
+      },
+      {
+        "color": "red",
+        "shape" : "rectangle",
+        "tags": "boundary2",
+        "id": 2
+      },
+      {
+        "color": "red",
+        "shape" : "rectangle",
+        "tags": "boundary3",
+        "id": 3
+      },
+      {
+        "color": "red",
+        "shape" : "rectangle",
+        "tags": "boundary4",
+        "id": 4
+      }
+    ],
+    "player": [
+      {
+        "color": "red",
+        "shape" : "circle",
+        "tags": "playerA",
+        "id": 5
+      }
+    ]
+  }
