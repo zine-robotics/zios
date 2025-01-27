@@ -52,6 +52,7 @@ class SerialInterface:
                     time.sleep(0.1)
         except serial.SerialException as e:
             print(f"Serial error: {e}")
-
-        self.is_connected = False
+        finally:
+            self.is_connected = False
+            print("Serial connection closed.")
 

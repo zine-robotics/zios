@@ -15,6 +15,8 @@ The player client is implemented in the `player` directory. The main components 
 - `player.py`: Contains the `Player` class, `PlayerDataClient` class for server communication, and `KeyListener` class for handling keyboard inputs.
 - `player_logic.py`: Contains the `player_logic` function that processes game state and updates the player's actions and velocity.
 
+Check [Player README](./player/README.md) to see how to implement the player logic
+
 #### Running the Player
 
 1. Ensure the server is running.

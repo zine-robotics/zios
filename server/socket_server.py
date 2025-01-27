@@ -40,8 +40,7 @@ class SocketClient:
                         self.manager.process_player_data(json_data)
                     except json.JSONDecodeError:
                         print(f"Failed to decode JSON from {self.client_address}: {data.decode()}")
-                        error_response = {"error": "Invalid JSON format"}
-                        self.client_socket.sendall(json.dumps(error_response).encode())
+                        self.send_data({"error": "Invalid JSON format"})
                 else:
                     break
         finally:
@@ -80,6 +79,11 @@ class SocketInterface:
             # print(f"Client {client_name} not found.")
             pass
 
+    def broadcast_to_clients(self, data):
+        """Sends data to all connected clients."""
+        for client in self.clients:
+            client.send_data(data)
+
     def run_server(self):
         """Accepts incoming client connections."""
         print(f"Server started. Listening on {self.host}:{self.port}...")
@@ -92,8 +96,11 @@ class SocketInterface:
                 self.clients.append(client_handler)
         except KeyboardInterrupt:
             print("Server shutting down...")
+        except Exception as e:
+            print(f"Server error: {e}")
         finally:
             for client in self.clients:
                 client.close_connection()
 
             self.server_socket.close()
+            print("Socket Server closed.")

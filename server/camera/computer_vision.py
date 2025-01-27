@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 import json
 from collections import deque
-from color_ranges import COLOR_RANGES
-from arena_entity import *
-from utils import *
+from camera.color_ranges import COLOR_RANGES
+from camera.arena_entity import *
+from camera.utils import *
 from enum import Enum
 
 
@@ -78,8 +78,10 @@ class ComputerVisionManager:
         """Run the vision pipeline in a loop."""
         if not self.cam:
             self.init_camera()
+            print("Camera initialized.")
 
-        while True:
+        while self.manager.running:
+            print("Processing frame...")
             ret, frame = self.cam.read()
             if not ret:
                 break
@@ -92,6 +94,7 @@ class ComputerVisionManager:
                 if current_M is not None:
                     warped_img = cv2.warpPerspective(frame, current_M, (self.width, self.height))
                     warped_img = draw_circles(warped_img, self.response_model)
+                    self.manager.process_frame(current_M, warped_img)
                     cv2.imshow("Frame", warped_img)
                 else:
                     cv2.imshow("Frame", frame)
@@ -112,6 +115,6 @@ class ComputerVisionManager:
 
 # Example usage
 if __name__ == "__main__":
-    config_path = "cvDetect/config/config2.json"  # Path to your JSON file
+    config_path = "./config/config2.json"  # Path to your JSON file
     cv_manager = ComputerVisionManager(manager=None, config_path=config_path)
     cv_manager.run()

@@ -1,9 +1,11 @@
 from enum import Enum
 import threading
 import time
+import os
 
 from socket_server import SocketInterface
 from serial_interface import SerialInterface
+from camera.computer_vision import ComputerVisionManager
 
 player_ids = ["player1", "player2", "player3", "player4"]
 
@@ -103,8 +105,11 @@ class Manager:
             Team("blue", "red_goal", [self.player_datas["player3"], self.player_datas["player4"]])
         ]
 
+        camera_config = os.path.join(os.path.dirname(__file__), "camera/config/config2.json")
+
         self.socket_interface = SocketInterface(self)
         self.serial_interface = SerialInterface(self)
+        self.camera_interface = ComputerVisionManager(self, camera_config)
 
     def validate_response(self, response: dict):
         player_id = response.get("player_id")
@@ -116,13 +121,13 @@ class Manager:
             return None
         
         player = self.player_datas[player_id]
-        boost = boost and player.boost_available
+        boost = boost #and player.boost_available
         if boost:
             player.boost_available = False
 
         v, w = velocity
-        v = max(min(v * 10, MAX_VELOCITY), MIN_VELOCITY)
-        w = max(min(w * 10, MAX_VELOCITY), MIN_VELOCITY)
+        v = max(min(-v * 10, MAX_VELOCITY), MIN_VELOCITY)
+        w = max(min(-w * 10, MAX_VELOCITY), MIN_VELOCITY)
 
         v = v * 1.5 if boost else v
         return {"player_id": player_id, "v": int(v), "w": int(w)}
@@ -130,6 +135,8 @@ class Manager:
     def process_player_data(self, data):
         # player_id = data.get("player_id")
         # print(f"Player {player_id} sent data: {data}")
+        if "error" in data:
+            return print(f"Error received from player: {data['error']}")
 
         serial_data = self.validate_response(data)
         if serial_data:
@@ -144,13 +151,14 @@ class Manager:
         if ldr_value > 500:
             player.boost_available = True
 
-    def opencv_detection(self):
-        while self.running:
-            response = default_response
-            time.sleep(0.1)
-            self.game_loop(response)
+    # def opencv_detection(self):
+    #     while self.running:
+    #         # response = default_response
+    #         self.camera_interface.r
+    #         time.sleep(0.1)
+    #         # self.game_loop(response)
 
-    def game_loop(self, response):
+    def process_frame(self, response, image):
         ball_pos = (0, 0, 0, 0, 0, 0)
         goal_pos = {
             "red_goal": [(0, 0), (0, 0)],
@@ -178,7 +186,7 @@ class Manager:
             })
 
     def run(self):
-        detection_thread = threading.Thread(target=self.opencv_detection)
+        detection_thread = threading.Thread(target=self.camera_interface.run)
         detection_thread.start()
 
         socket_thread = threading.Thread(target=self.socket_interface.run_server)
@@ -192,10 +200,11 @@ class Manager:
                 time.sleep(1)
         except KeyboardInterrupt:
             print("Got Keyboard Interrupt")
+        finally:
             self.running = False
-            detection_thread.join()
-            socket_thread.join()
-            serial_thread.join()
+            detection_thread.join(1)
+            socket_thread.join(1)
+            serial_thread.join(1)
 
     
 if __name__ == "__main__":

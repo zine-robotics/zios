@@ -1,0 +1,14 @@
+{
+    "serial_interface": {
+        "serial_port": "/dev/cu.usbserial-0001",
+        "baud_rate": 9600
+    },
+    "socket_interface": {
+        "host": "0.0.0.0",
+        "port": 65432,
+        "max_connections": 10
+    },
+    "manager": {
+        
+    }
+}

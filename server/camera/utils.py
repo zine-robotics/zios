@@ -2,8 +2,8 @@ import numpy as np
 import cv2
 from enum import Enum
 from shapely.geometry import MultiPoint, Polygon
-from color_ranges import COLOR_RANGES
-from arena_entity import *
+from camera.color_ranges import COLOR_RANGES
+from camera.arena_entity import *
 
 
 def detect_shapes_and_colors(image):
