@@ -1,13 +1,17 @@
 from enum import Enum
 import threading
+import random
+import math
 import time
 import os
 
 from socket_server import SocketInterface
 from serial_interface import SerialInterface
 from camera.computer_vision import ComputerVisionManager
+from ml_agent.agent_interface import AgentInterface
 
 player_ids = ["player1", "player2", "player3", "player4"]
+model_path= "D:\Documents\projects\zios\server\ml_agent\PushBlock.onnx"
 
 MAX_VELOCITY = 10
 MIN_VELOCITY = -10
@@ -17,60 +21,68 @@ class Mobility(Enum):
     DYNAMIC = 2
 
 class EntityType(Enum):
-    PLAYER = 1
-    BOUNDARY = 2
-    OBSTACLE = 3
-    REGION = 4
+    BOUNDARY = "boundary"
+    PLAYER = "player"
+    OBJECT = "object"
+    REGION = "region"
 
-default_response = [
-    {
-        "id": "boundary",
-        "pos": (0, 0, 0, 0 ,0, 0),
-        "type": EntityType.BOUNDARY,
-        "tag": [],
-        "mobility": Mobility.STATIC,
-        "other": {
-            "boundary_points": [(0, 0), (0, 0), (0, 0), (0, 0)],
-        },
-    },
-    {
-        "id": "player1",
-        "pos": (0, 0, 0, 0 ,0, 0),
-        "type": EntityType.PLAYER,
-        "tag": [],
-        "mobility": Mobility.DYNAMIC,
-        "other": {}
-    },
-    {
-        "id": "ball",
-        "pos": (5, 5, 0, 0 ,0, 0),
-        "type": EntityType.OBSTACLE,
-        "tag": [],
-        "mobility": Mobility.DYNAMIC,
-        "other": {}
-    },
-    {
-        "id": "blue_goal",
-        "pos": (0, 0, 0, 0 ,0, 0),
-        "type": EntityType.REGION,
-        "tag": [],
-        "mobility": Mobility.STATIC,
-        "other": {
-            "polygon": [(20, 20), (0, 0)]
-        }
-    },
-    {
-        "id": "red_goal",
-        "pos": (0, 0, 0, 0 ,0, 0),
-        "type": EntityType.REGION,
-        "tag": [],
-        "mobility": Mobility.STATIC,
-        "other": {
-            "polygon": [(-20, -20), (0, 0)]
-        }
-    }
-]
+# default_response = [
+#     {
+#         "id": "boundary",
+#         "pos": (0, 0, 0, 0 ,0, 0),
+#         "type": EntityType.BOUNDARY,
+#         "tag": [],
+#         "mobility": Mobility.STATIC,
+#         "other": {
+#             "boundary_points": [(0, 0), (0, 0), (0, 0), (0, 0)],
+#         },
+#     },
+#     {
+#         "id": "player1",
+#         "pos": (0, 0, 0, 0 ,0, 0),
+#         "type": EntityType.PLAYER,
+#         "tag": [],
+#         "mobility": Mobility.DYNAMIC,
+#         "other": {}
+#     },
+#     {
+#         "id": "ball",
+#         "pos": (5, 5, 0, 0 ,0, 0),
+#         "type": EntityType.OBSTACLE,
+#         "tag": [],
+#         "mobility": Mobility.DYNAMIC,
+#         "other": {}
+#     },
+#     {
+#         "id": "blue_goal",
+#         "pos": (0, 0, 0, 0 ,0, 0),
+#         "type": EntityType.REGION,
+#         "tag": [],
+#         "mobility": Mobility.STATIC,
+#         "other": {
+#             "polygon": [(20, 20), (0, 0)]
+#         }
+#     },
+#     {
+#         "id": "red_goal",
+#         "pos": (0, 0, 0, 0 ,0, 0),
+#         "type": EntityType.REGION,
+#         "tag": [],
+#         "mobility": Mobility.STATIC,
+#         "other": {
+#             "polygon": [(-20, -20), (0, 0)]
+#         }
+#     }
+# ]
 
+# Revised Sample Data (Bot faces east toward the goal)
+default_frame_data = {
+    'goal_coords': [(-10, 0), (-10, 0), (0, 0), (0, -10)],  # Goal in front of the bot
+    'wall_coords': [(-10, -10), (-10, 110), (110, 110), (110, -10)],  # Boundary around the world
+    'ball_coords': (45, 20),  # Ball to the right of the bot
+    'bot_pos': (40, 20),
+    'bot_dir': 0  # Facing east (toward the goal)
+}
 
 class Player:
     def __init__(self, id: str):
@@ -110,6 +122,7 @@ class Manager:
         self.socket_interface = SocketInterface(self)
         self.serial_interface = SerialInterface(self)
         self.camera_interface = ComputerVisionManager(self, camera_config)
+        self.aget_interface =  AgentInterface(model_path)
 
     def validate_response(self, response: dict):
         player_id = response.get("player_id")
@@ -159,31 +172,42 @@ class Manager:
     #         # self.game_loop(response)
 
     def process_frame(self, response, image):
-        ball_pos = (0, 0, 0, 0, 0, 0)
-        goal_pos = {
-            "red_goal": [(0, 0), (0, 0)],
-            "blue_goal": [(0, 0), (0, 0)]
+
+        #print(response)
+        cv_frame_data = {
+        # 'goal_coords': [],  # Goal in front of the bot
+        # 'wall_coords': [],  # Boundary around the world
+        # 'ball_coords': (0, 0),  # Ball to the right of the bot
+        # 'bot_pos': (0, 0),
+        # 'bot_dir': 0  # Facing east (toward the goal)
         }
-
+        required_fields = ["bot_pos", "bot_dir", "ball_coords", "goal_coords", "wall_coords"]
+      
         for obj in response:
-            if obj["type"] == EntityType.PLAYER:
-                player = self.player_datas.get(obj["id"])
-                player.pos = obj["pos"]
+            if obj["tag"] == "bot":
+                #print("Player Pos", obj["pose"])
+                cv_frame_data["bot_pos"] = list((obj["pose"][:2]))
+                cv_frame_data["bot_dir"] = float(obj["pose"][-1]*180/math.pi)
+                
+            elif obj["tag"] == "target":
+                cv_frame_data["ball_coords"] =  obj["pose"][:2]
+                #print("target pos", obj["pose"])
 
-            elif obj["id"] == "ball":
-                ball_pos = obj["pos"]
+            elif  obj["tag"] == 'goal':
+                #print("goal pose" ,obj["options"]["boundary_points"])
+                cv_frame_data["goal_coords"] = obj["options"]["boundary_points"]
+            
+            elif obj["id"] == "boundary":
+                cv_frame_data["wall_coords"] = obj["options"]["boundary_points"]
+                #print("boundary pos" ,obj["options"]["boundary_points"])
+        
+        if all(key in cv_frame_data for key in required_fields):
+            self.aget_interface.step(cv_frame_data,image)
+        else:
+           # print("Invalid frame: Missing required fields ->", set(required_fields) - cv_frame_data.keys())
+           pass
 
-            elif obj["type"] == EntityType.REGION and 'goal' in obj["id"]:
-                goal_pos[obj["id"]] = obj["other"]["polygon"]
-
-        # Send data to clients
-        for player in self.player_datas.values():
-            team_goal_pos = goal_pos[player.team.goal_tag]
-            self.socket_interface.send_to_client(player.id, {
-                "player": player.get_json(),
-                "target_pos": ball_pos,
-                "goal_pos": team_goal_pos
-            })
+        return
 
     def run(self):
         detection_thread = threading.Thread(target=self.camera_interface.run)

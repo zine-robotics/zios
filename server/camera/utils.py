@@ -53,6 +53,7 @@ def detect_aruco_markers(image):
     detectorParam = cv2.aruco.DetectorParameters()
     detector = cv2.aruco.ArucoDetector(markerDictionary, detectorParam)
     corners, ids, rejected = detector.detectMarkers(image)
+    print(ids)
 
     list_of_aruco = []
     if ids is not None :
@@ -160,12 +161,12 @@ def get_6dof_pos(points, is_aruco=False):
         x = (points[0][0] + points[2][0]) / 2
         y = (points[0][1] + points[2][1]) / 2
         yaw = np.arctan2(points[2][1] - points[0][1], points[2][0] - points[0][0])
-        return np.array((x, y, 0, 0, 0, yaw),dtype=np.int32)
+        return np.array((x, y, 0, 0, 0, yaw),dtype=np.float32)
     
     
     else:
         point = np.mean(points,axis=0)
-        return np.array((point[0], point[1], 0, 0, 0, 0),dtype=np.int32)
+        return np.array((point[0], point[1], 0, 0, 0, 0),dtype=np.float32)
     
 
 def order_points(pts):

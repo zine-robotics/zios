@@ -5,11 +5,12 @@ from collections import deque
 from camera.color_ranges import COLOR_RANGES
 from camera.arena_entity import *
 from camera.utils import *
+import traceback
 from enum import Enum
 
 
 class ComputerVisionManager:
-    def __init__(self, manager, config_path, width=1000, height=1000):
+    def __init__(self, manager, config_path, width=700, height=470):
         # Initialize parameters
         self.width = width
         self.height = height
@@ -31,7 +32,7 @@ class ComputerVisionManager:
 
     def init_camera(self):
         """Initialize the camera settings."""
-        self.cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.cam = cv2.VideoCapture(1, cv2.CAP_DSHOW)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
 
@@ -81,7 +82,7 @@ class ComputerVisionManager:
             print("Camera initialized.")
 
         while self.manager.running:
-            print("Processing frame...")
+            # print("Processing frame...")
             ret, frame = self.cam.read()
             if not ret:
                 break
@@ -89,17 +90,21 @@ class ComputerVisionManager:
             try:
                 # Process the frame and get the transformation matrix
                 current_M = self.process_frame(frame)
-
-                # Apply the transformation and display the result
+             
+                
+                #Apply the transformation and display the result
                 if current_M is not None:
                     warped_img = cv2.warpPerspective(frame, current_M, (self.width, self.height))
                     warped_img = draw_circles(warped_img, self.response_model)
-                    self.manager.process_frame(current_M, warped_img)
-                    cv2.imshow("Frame", warped_img)
+                    self.manager.process_frame(self.response_model, warped_img)
+                    cv2.imshow("Wrapped Frame", warped_img)
                 else:
-                    cv2.imshow("Frame", frame)
+                    cv2.imshow("Wrapped Frame", frame)
+
             except Exception as e:
                 print(f"Error: {e}")
+                traceback.print_exc()  # Prints the full tracebac
+                
 
             # Break the loop if 'q' is pressed
             if cv2.waitKey(1) == ord("q"):
