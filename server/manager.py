@@ -11,7 +11,7 @@ from camera.computer_vision import ComputerVisionManager
 from ml_agent.agent_interface import AgentInterface
 
 player_ids = ["player1", "player2", "player3", "player4"]
-model_path= "D:\Documents\projects\zios\server\ml_agent\PushBlock.onnx"
+model_path= "server/ml_agent/PushBlock.onnx"
 
 MAX_VELOCITY = 10
 MIN_VELOCITY = -10
@@ -121,7 +121,7 @@ class Manager:
 
         self.socket_interface = SocketInterface(self)
         self.serial_interface = SerialInterface(self)
-        self.camera_interface = ComputerVisionManager(self, camera_config)
+        self.camera_interface = ComputerVisionManager(self, camera_config,width=700,height=470)
         self.aget_interface =  AgentInterface(model_path)
 
     def validate_response(self, response: dict):

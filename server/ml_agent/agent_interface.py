@@ -70,7 +70,7 @@ class AgentInterface:
         """
         # Create an observation object
 
-        print(cv_frame_data)
+        #print(cv_frame_data)
         processed_frame_data,rays = self.agent_observation.addObservation(cv_frame_data)
         # print("added observation")
         visualize_frame(cv_frame_data,processed_frame_data,rays,image)
