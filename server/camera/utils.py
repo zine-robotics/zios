@@ -53,7 +53,7 @@ def detect_aruco_markers(image):
     detectorParam = cv2.aruco.DetectorParameters()
     detector = cv2.aruco.ArucoDetector(markerDictionary, detectorParam)
     corners, ids, rejected = detector.detectMarkers(image)
-    print(ids)
+  
 
     list_of_aruco = []
     if ids is not None :

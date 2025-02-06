@@ -2,15 +2,18 @@ from enum import Enum
 import threading
 import random
 import math
+import cv2
 import time
+import asyncio
 import os
 
 from socket_server import SocketInterface
 from serial_interface import SerialInterface
 from camera.computer_vision import ComputerVisionManager
 from ml_agent.agent_interface import AgentInterface
+from websocket_server import WebSocketServer
 
-player_ids = ["player1", "player2", "player3", "player4"]
+player_ids = ["3"]
 model_path= "server/ml_agent/PushBlock.onnx"
 
 MAX_VELOCITY = 10
@@ -113,8 +116,7 @@ class Manager:
         self.running = True
         self.player_datas = {pid: Player(pid) for pid in player_ids}
         self.teams = [
-            Team("red", "blue_goal", [self.player_datas["player1"], self.player_datas["player2"]]),
-            Team("blue", "red_goal", [self.player_datas["player3"], self.player_datas["player4"]])
+            Team("red", "green_goal", [self.player_datas["3"]]),
         ]
 
         camera_config = os.path.join(os.path.dirname(__file__), "camera/config/config2.json")
@@ -122,7 +124,10 @@ class Manager:
         self.socket_interface = SocketInterface(self)
         self.serial_interface = SerialInterface(self)
         self.camera_interface = ComputerVisionManager(self, camera_config,width=700,height=470)
-        self.aget_interface =  AgentInterface(model_path)
+        self.aget_interface =  AgentInterface(self,model_path)
+        self.webscoket_interface = WebSocketServer(self)
+
+        self.frame_rate = 20
 
     def validate_response(self, response: dict):
         player_id = response.get("player_id")
@@ -171,8 +176,9 @@ class Manager:
     #         time.sleep(0.1)
     #         # self.game_loop(response)
 
-    def process_frame(self, response, image):
+    
 
+    def process_frame(self, response, image):
         #print(response)
         cv_frame_data = {
         # 'goal_coords': [],  # Goal in front of the bot
@@ -181,6 +187,16 @@ class Manager:
         # 'bot_pos': (0, 0),
         # 'bot_dir': 0  # Facing east (toward the goal)
         }
+        
+       
+            # print("send frame")
+        # if(self.frame_rate<=0):
+        #     self.webscoket_interface.send_frame(image,"cvframe")
+        #     self.frame_rate=20
+        # self.frame_rate-=1
+        
+        self.webscoket_interface.send_frame(image,"cvframe1")
+        
         required_fields = ["bot_pos", "bot_dir", "ball_coords", "goal_coords", "wall_coords"]
       
         for obj in response:
@@ -188,6 +204,7 @@ class Manager:
                 #print("Player Pos", obj["pose"])
                 cv_frame_data["bot_pos"] = list((obj["pose"][:2]))
                 cv_frame_data["bot_dir"] = float(obj["pose"][-1]*180/math.pi)
+                #print(obj["id"])
                 
             elif obj["tag"] == "target":
                 cv_frame_data["ball_coords"] =  obj["pose"][:2]
@@ -202,6 +219,7 @@ class Manager:
                 #print("boundary pos" ,obj["options"]["boundary_points"])
         
         if all(key in cv_frame_data for key in required_fields):
+            pass
             self.aget_interface.step(cv_frame_data,image)
         else:
            # print("Invalid frame: Missing required fields ->", set(required_fields) - cv_frame_data.keys())
@@ -213,11 +231,16 @@ class Manager:
         detection_thread = threading.Thread(target=self.camera_interface.run)
         detection_thread.start()
 
-        socket_thread = threading.Thread(target=self.socket_interface.run_server)
-        socket_thread.start()
+        # socket_thread = threading.Thread(target=self.socket_interface.run_server)
+        # socket_thread.start()
+
+        websocket_thread = threading.Thread(target=self.webscoket_interface.run)
+        websocket_thread.start()
 
         serial_thread = threading.Thread(target=self.serial_interface.start)
         serial_thread.start()
+
+        # asyncio.run(self.webscoket_interface.start())
 
         try:
             while True:
@@ -226,9 +249,11 @@ class Manager:
             print("Got Keyboard Interrupt")
         finally:
             self.running = False
+            self.webscoket_interface.stop()
             detection_thread.join(1)
-            socket_thread.join(1)
+            websocket_thread.join(1)
             serial_thread.join(1)
+            # websocket_thread.stop
 
     
 if __name__ == "__main__":

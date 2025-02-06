@@ -20,6 +20,7 @@ class SocketClient:
         self.client_address = client_address
         self.active = True
         self.player_id = ""
+        self.cv_frame = None
         
         threading.Thread(target=self.handle_client).start()
 

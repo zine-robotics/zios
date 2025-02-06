@@ -73,3 +73,4 @@ def visualize_frame(cv_frame_data, processed_frame, rays, image):
     # Show the image
     cv2.imshow('Observation Frame', img)
     cv2.waitKey(1)
+    return img

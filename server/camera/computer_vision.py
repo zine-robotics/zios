@@ -32,7 +32,7 @@ class ComputerVisionManager:
 
     def init_camera(self):
         """Initialize the camera settings."""
-        self.cam = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        self.cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
 
@@ -82,7 +82,7 @@ class ComputerVisionManager:
             print("Camera initialized.")
 
         while self.manager.running:
-            # print("Processing frame...")
+            #print("Processing frame...")
             # ret, frame = self.cam.read()
             # if not ret:
             #     break
@@ -97,6 +97,7 @@ class ComputerVisionManager:
                 if current_M is not None:
                     warped_img = cv2.warpPerspective(frame, current_M, (self.width, self.height))
                     warped_img = draw_circles(warped_img, self.response_model)
+                    
                     self.manager.process_frame(self.response_model, warped_img)
                     cv2.imshow("Wrapped Frame", warped_img)
                 else:

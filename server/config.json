@@ -1,6 +1,6 @@
 {
     "serial_interface": {
-        "serial_port": "/dev/cu.usbserial-0001",
+        "serial_port": "COM13",
         "baud_rate": 9600
     },
     "socket_interface": {
@@ -8,7 +8,5 @@
         "port": 65432,
         "max_connections": 10
     },
-    "manager": {
-        
-    }
+    "manager": {}
 }

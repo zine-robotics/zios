@@ -34,7 +34,7 @@ class Observation:
         return rays
 
     def update_new_frame(self, ray_index, hitFlag, tag_index, hitFraction):
-        print(hitFraction)
+        #print(hitFraction)
         if hitFlag:
             if self.new_frame[ray_index, 3] > hitFraction:  # Update only if closer hit
                 self.new_frame[ray_index, :3] = 0  # Reset all tag indices to 0
@@ -50,7 +50,7 @@ class Observation:
         rays_list = list(self.rays)
         for idx, ray in enumerate(rays_list):
 
-            print("try object hit: idx, raydist",len(rays_list),idx, ray.distance(target_point))
+            #print("try object hit: idx, raydist",len(rays_list),idx, ray.distance(target_point))
             if ray.distance(target_point) <= self.hit_threshold:
                
                

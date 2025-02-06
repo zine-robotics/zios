@@ -3,7 +3,7 @@ import json
 import time
 import queue
 
-serial_port = "/dev/cu.usbserial-0001"
+serial_port = "COM13"
 baud_rate = 115200
 
 class SerialInterface:
