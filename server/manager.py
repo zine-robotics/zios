@@ -151,8 +151,8 @@ class Manager:
         return {"player_id": player_id, "v": int(v), "w": int(w)}
 
     def process_player_data(self, data):
-        # player_id = data.get("player_id")
-        # print(f"Player {player_id} sent data: {data}")
+        player_id = data.get("player_id")
+        print(f"Player {player_id} sent data: {data}")
         if "error" in data:
             return print(f"Error received from player: {data['error']}")
 
@@ -197,13 +197,14 @@ class Manager:
         
         self.webscoket_interface.send_frame(image,"cvframe1")
         
-        required_fields = ["bot_pos", "bot_dir", "ball_coords", "goal_coords", "wall_coords"]
+        required_fields = ["bot_pos", "bot_dir", "ball_coords", "goal_coords", "wall_coords", ]
       
         for obj in response:
             if obj["tag"] == "bot":
                 #print("Player Pos", obj["pose"])
                 cv_frame_data["bot_pos"] = list((obj["pose"][:2]))
                 cv_frame_data["bot_dir"] = float(obj["pose"][-1]*180/math.pi)
+                cv_frame_data["bot_id"] = obj["id"]
                 #print(obj["id"])
                 
             elif obj["tag"] == "target":
@@ -219,7 +220,6 @@ class Manager:
                 #print("boundary pos" ,obj["options"]["boundary_points"])
         
         if all(key in cv_frame_data for key in required_fields):
-            pass
             self.aget_interface.step(cv_frame_data,image)
         else:
            # print("Invalid frame: Missing required fields ->", set(required_fields) - cv_frame_data.keys())

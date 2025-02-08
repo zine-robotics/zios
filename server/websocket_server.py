@@ -3,8 +3,6 @@ import websockets
 import base64
 import json
 import cv2
-import threading
-from utils import compress_image
 
 class WebSocketServer:
     def __init__(self, manager, host="0.0.0.0", port=8081):

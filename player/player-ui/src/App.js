@@ -9,6 +9,8 @@ export default function BotController() {
   const [videoFeed1, setVideoFeed1] = useState("");
   const [videoFeed2, setVideoFeed2] = useState("");
   const socketRef = useRef(null);
+  const lastSentTime = useRef(0);
+  const delay = 100; // Throttle rate in milliseconds
 
   useEffect(() => {
     socketRef.current = new WebSocket("ws://localhost:8081");
@@ -22,29 +24,18 @@ export default function BotController() {
       try {
         let parsedData = JSON.parse(event.data);
         console.log(parsedData.data);
-        // console.log("First Parsed Data:", parsedData);
 
         if (typeof parsedData === "string") {
           parsedData = JSON.parse(parsedData);
         }
 
-        // console.log("Final Data Type:", parsedData?.data); // Should now work
-
         if (parsedData.type === "cvframe1" && parsedData?.data) {
-          // Ensure it's a valid base64 string
-
           const base64Image = `data:image/jpeg;base64,${parsedData?.data}`;
-          //    console.log(base64Image);
-          console.log("Data Type:", parsedData?.data);
           setVideoFeed1(base64Image);
         }
 
         if (parsedData.type === "cvframe2" && parsedData?.data) {
-          // Ensure it's a valid base64 string
-
           const base64Image = `data:image/jpeg;base64,${parsedData?.data}`;
-          //    console.log(base64Image);
-          // console.log("Data Type:", parsedData?.type);
           setVideoFeed2(base64Image);
         }
       } catch (error) {
@@ -68,6 +59,11 @@ export default function BotController() {
 
   const sendCommand = (lin, ang) => {
     if (!connected || !socketRef.current) return;
+
+    const now = Date.now();
+    if (now - lastSentTime.current < delay) return; // Throttle updates
+
+    lastSentTime.current = now;
 
     const command = {
       player_id: playerId,

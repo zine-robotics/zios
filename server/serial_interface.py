@@ -36,6 +36,7 @@ class SerialInterface:
                         try:
                             data = json.loads(line)
                             if data.get('succ', False):
+                                print(data)
                                 self.manager.process_serial_data(data)
                             else:
                                 print(f"Error received from serial: {data}")

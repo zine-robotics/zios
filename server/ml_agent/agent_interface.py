@@ -57,7 +57,7 @@ class AgentInterface:
         
         # Perform inference
         result = self.session.run([self.output_name], inputs)
-        print(result)
+        # print(result)
         return(result)
        
 
