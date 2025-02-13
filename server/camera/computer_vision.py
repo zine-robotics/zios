@@ -32,7 +32,7 @@ class ComputerVisionManager:
 
     def init_camera(self):
         """Initialize the camera settings."""
-        self.cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.cam = cv2.VideoCapture(1, cv2.CAP_DSHOW)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
 
@@ -82,11 +82,11 @@ class ComputerVisionManager:
             print("Camera initialized.")
 
         while self.manager.running:
-            #print("Processing frame...")
-            # ret, frame = self.cam.read()
-            # if not ret:
-            #     break
-            frame = cv2.imread("server/camera/test_images/rlAgent.png")
+            # print("Processing frame...")
+            ret, frame = self.cam.read()
+            if not ret:
+                break
+            # frame = cv2.imread("server/camera/test_images/rlAgent.png")
 
             try:
                 # Process the frame and get the transformation matrix

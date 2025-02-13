@@ -39,27 +39,52 @@ class AgentInterface:
     def infer_action(self, observation):
         """
         Run inference using the ONNX model to get the agent's action.
-
-        :param observation: Processed input for the model.
-        :return: The action predicted by the model.
         """
-        # Create dummy action masks (adjust as needed based on your environment)
-        action_masks = np.ones((1, 7), dtype=np.float32)  # Assuming  possible actions
+        action_masks = np.ones((1, 7), dtype=np.float32)
 
-        # Add batch dimension and ensure correct dtype for observation
-        observation = np.expand_dims(observation, axis=0).astype(np.float32)
-       
-        # Prepare inputs for the model
-        inputs = {
-            'obs_0': observation,  # Main observation data
-            'action_masks': action_masks  # Mask to restrict invalid actions
-        }
+        # Ensure correct observation format
+        observation = np.array(observation, dtype=np.float32)
+        observation = np.expand_dims(observation, axis=0)
+
+        inputs = {'obs_0': observation, 'action_masks': action_masks}
+
+        # Run inference
+        result = self.session.run(None, inputs)
         
-        # Perform inference
-        result = self.session.run([self.output_name], inputs)
-        # print(result)
-        return(result)
+        # Extract discrete action (using index 2)
+        discrete_action = int(result[2][0][0])  # Extract value from array
+
+        # print("Discrete Action:", discrete_action)  # Debugging
+
+        return discrete_action  # Return as integer
+
+
        
+    def action_to_vel(self,action):
+        """
+        Maps the discrete action from Unity to real-world velocities (v, w).
+        
+        :param action: Discrete action (0-6)
+        :return: Tuple (v, w) where v is linear velocity and w is angular velocity
+        """
+        v, w = 0, 0  # Default stop
+        scale = 10
+
+        if action == 1:  # Move forward
+            v = 1
+        elif action == 2:  # Move backward
+            v = -1
+        elif action == 3:  # Rotate left
+            w = 1
+        elif action == 4:  # Rotate right
+            w = -1
+        elif action == 5:  # Strafe left (approximate with slight left rotation)
+            w = 0.5
+        elif action == 6:  # Strafe right (approximate with slight right rotation)
+            w = -0.5
+
+        
+        return v*scale, w*scale 
 
     def step(self, cv_frame_data,image):
         """
@@ -79,11 +104,23 @@ class AgentInterface:
         # print(ray_data)
 
         # Preprocess the ray data
+        # print(self.agent_observation.data)
         observation = self.preprocess_observation(self.agent_observation.data)
         # # print("Processed observation shape:", observation.shape)
         # # Infer the action
+        # print(observation)
         action = self.infer_action(observation)
-        #print("actions",action)
+        # print(action)
+        target_velocity= self.action_to_vel(action)
+
+        agent_response_data= {
+            "player_id": cv_frame_data["bot_id"],
+            "velocity": target_velocity,
+            "actions":{}
+        }
+        self.manager.process_player_data(agent_response_data)
+       
+        print("actions",action,target_velocity)
 
         #return action
 
