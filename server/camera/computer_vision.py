@@ -29,9 +29,11 @@ class ComputerVisionManager:
         # Camera object
         self.cam = None
         self.manager = manager
+        self.camera_ip= "http://192.168.137.119:8080/video"
 
     def init_camera(self):
         """Initialize the camera settings."""
+
         self.cam = cv2.VideoCapture(1, cv2.CAP_DSHOW)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)

@@ -47,20 +47,40 @@ def detect_shapes_and_colors(image):
 
 
 
-def detect_aruco_markers(image):
+import cv2
+import numpy as np
 
+def detect_aruco_markers(image):
+    # Convert to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Apply mild Gaussian blur (reduces noise but keeps details)
+    gray = cv2.GaussianBlur(gray, (3, 3), 0)
+
+    # Define the ArUco dictionary and detector parameters
     markerDictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_50)
-    detectorParam = cv2.aruco.DetectorParameters()
-    detector = cv2.aruco.ArucoDetector(markerDictionary, detectorParam)
-    corners, ids, rejected = detector.detectMarkers(image)
-  
+    detectorParams = cv2.aruco.DetectorParameters()
+    
+    # Improve robustness to shadows
+    detectorParams.adaptiveThreshWinSizeMin = 5
+    detectorParams.adaptiveThreshWinSizeMax = 23
+    detectorParams.adaptiveThreshWinSizeStep = 10
+    detectorParams.minMarkerPerimeterRate = 0.03
+    detectorParams.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
+
+    detector = cv2.aruco.ArucoDetector(markerDictionary, detectorParams)
+
+    # Detect ArUco markers
+    corners, ids, rejected = detector.detectMarkers(gray)
 
     list_of_aruco = []
-    if ids is not None :
+    if ids is not None:
         for i in range(len(ids)):
-            list_of_aruco.append((ids[i][0],corners[i][0]))
+            list_of_aruco.append((ids[i][0], corners[i][0]))
+    
 
     return list_of_aruco
+
 
 from collections import defaultdict
 
@@ -119,6 +139,7 @@ def assign_positions_to_aruco_entities(entities, list_of_aruco):
                 positions = positions_dict[id].pop()
                 entity = grouped_entities[id].pop()
                 result.append((entity,positions))
+    
             
     return result
 

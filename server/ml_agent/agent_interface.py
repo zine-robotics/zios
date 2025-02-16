@@ -74,10 +74,10 @@ class AgentInterface:
             v = 1
         elif action == 2:  # Move backward
             v = -1
-        elif action == 3:  # Rotate left
-            w = 1
-        elif action == 4:  # Rotate right
+        elif action == 3:  # Rotate right
             w = -1
+        elif action == 4:  # Rotate left
+            w = 1
         elif action == 5:  # Strafe left (approximate with slight left rotation)
             w = 0.5
         elif action == 6:  # Strafe right (approximate with slight right rotation)
@@ -98,8 +98,7 @@ class AgentInterface:
         #print(cv_frame_data)
         processed_frame_data,rays = self.agent_observation.addObservation(cv_frame_data)
         # print("added observation")
-        processed_frame_img= visualize_frame(cv_frame_data,processed_frame_data,rays,image)
-        self.manager.webscoket_interface.send_frame(processed_frame_img,"cvframe2")
+       
         # print("ray Data",ray_data)
         # print(ray_data)
 
@@ -122,6 +121,8 @@ class AgentInterface:
        
         print("actions",action,target_velocity)
 
+        processed_frame_img= visualize_frame(cv_frame_data,processed_frame_data,rays,image,action)
+        self.manager.webscoket_interface.send_frame(processed_frame_img,"cvframe2")
         #return action
 
 # Example usage:

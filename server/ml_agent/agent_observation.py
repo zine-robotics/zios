@@ -7,7 +7,7 @@ import cv2
 class Observation:
     def __init__(self):
         self.data = np.zeros((3, 7, 5), dtype=float)  
-        self.ray_length = 400.0  
+        self.ray_length = 350.0  
         self.num_rays = 7
 
         self.new_frame = np.tile([0, 0, 0, 1, 1], (7, 1)).astype(float)
@@ -21,18 +21,25 @@ class Observation:
         self.hit_threshold = 50
 
     def generate_rays(self, origin, angle):
-        """Generate rays from the given origin with a spread of angles."""
-        rays = []
-        angles = np.linspace(angle-90, angle , self.num_rays)
+        """Generate rays in an alternating order around the central angle."""
+        
+        delta_angles = np.linspace(45,-135,self.num_rays)  # Define symmetric spread
 
-        for theta in angles:
-            theta_rad = np.radians(theta)
-            end_x = origin[0] + self.ray_length * np.cos(theta_rad)
-            end_y = origin[1] + self.ray_length * np.sin(theta_rad)
+        # Generate alternating order (0, -1, +1, -2, +2, ..., -n, +n)
+        mid_idx = len(delta_angles) // 2
+        sorted_indices = np.argsort(np.abs(np.arange(len(delta_angles)) - mid_idx))
+        alt_angles = delta_angles[sorted_indices]  # Reorder angles
+        print(angle,alt_angles-angle)
+        # Convert to radians and apply to base angle
+        angles = np.radians(angle + alt_angles)
+        print(angles)
+        # Vectorized endpoint computation
+        end_x = origin[0] + self.ray_length * np.cos(angles)
+        end_y = origin[1] + self.ray_length * np.sin(angles)
 
-            ray = geom.LineString([origin, (end_x, end_y)])
-            rays.append(ray)
-
+        # Create LineString rays
+        rays = [geom.LineString([origin, (ex, ey)]) for ex, ey in zip(end_x, end_y)]
+        
         return rays
 
     def wall_hit(self, frame_width, frame_height, origin):
@@ -78,6 +85,7 @@ class Observation:
                 hit_distance = origin_point.distance(intersection)
                 hitFraction = hit_distance / self.ray_length
                 self.update_new_frame(idx, True, tag_index, hitFraction)
+                print("Ray Hit Object",idx)
 
     def polygon_hit(self, polygon_coords, tag_index, origin):
         """Check if any rays intersect a polygon boundary and update hit distances."""

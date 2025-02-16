@@ -126,7 +126,7 @@ class Manager:
         self.camera_interface = ComputerVisionManager(self, camera_config,width=700,height=470)
         self.aget_interface =  AgentInterface(self,model_path)
         self.webscoket_interface = WebSocketServer(self)
-
+        self.frame_const = 5
         self.frame_rate = 1
 
     def validate_response(self, response: dict):
@@ -198,7 +198,7 @@ class Manager:
             #     self.webscoket_interface.send_frame(image,"cvframe")
             #     self.frame_rate=20
             # self.frame_rate-=1
-            self.frame_rate = 10
+            self.frame_rate = self.frame_const
             self.webscoket_interface.send_frame(image,"cvframe1")
             
             required_fields = ["bot_pos", "bot_dir", "ball_coords", "goal_coords", "wall_coords", "bot_id" ]
@@ -227,7 +227,7 @@ class Manager:
                 self.aget_interface.step(cv_frame_data,image)
             else:
                 pass
-            # print("Invalid frame: Missing required fields ->", set(required_fields) - cv_frame_data.keys())
+                print("Invalid frame: Missing required fields ->", set(required_fields) - cv_frame_data.keys())
             
 
         return
