@@ -1,7 +1,9 @@
 import onnxruntime as ort
 import numpy as np
 from ml_agent.agent_observation import Observation
+from ml_agent.multi_agent_observation import MultiAgentObservation
 from ml_agent.visualize import visualize_frame
+from ml_agent.multi_agent_visualize import multi_agent_visualize_frame
 
 
 class AgentInterface:
@@ -15,9 +17,12 @@ class AgentInterface:
         self.session = ort.InferenceSession(model_path)
         self.input_name = self.session.get_inputs()[0].name
         self.output_name = self.session.get_outputs()[0].name
-        print("Model input shape:", self.session.get_inputs()[1].shape)
+        print("Model input shape:", self.session.get_inputs()[0].shape)
         self.manager = manager
-        self.agent_observation = Observation()
+       # self.agent_observation = Observation()
+        self.agent_observation = MultiAgentObservation()
+        #input_shape = (3, 7, 5)
+        self.input_shape = (3,37,7)
 
     def preprocess_observation(self, ray_data):
         """
@@ -27,8 +32,10 @@ class AgentInterface:
         :return: Flattened and normalized observation for inference.
         """
         # Validate the input shape
-        if ray_data.shape != (3, 7, 5):
+        if ray_data.shape != self.input_shape:
             raise ValueError("Input ray data must have the shape (3, 7, 5).")
+        
+
 
         # Flatten the data and normalize if required (example normalization applied here)
         flat_data = ray_data.flatten()
@@ -97,17 +104,16 @@ class AgentInterface:
 
         #print(cv_frame_data)
         processed_frame_data,rays = self.agent_observation.addObservation(cv_frame_data)
+
         # print("added observation")
-       
-        # print("ray Data",ray_data)
-        # print(ray_data)
 
         # Preprocess the ray data
-        # print(self.agent_observation.data)
+        
+        print(self.agent_observation.data.shape)
         observation = self.preprocess_observation(self.agent_observation.data)
-        # # print("Processed observation shape:", observation.shape)
-        # # Infer the action
-        # print(observation)
+        # # # print("Processed observation shape:", observation.shape)
+        # # # Infer the action
+        # # print(observation)
         action = self.infer_action(observation)
         # print(action)
         target_velocity= self.action_to_vel(action)
@@ -119,9 +125,10 @@ class AgentInterface:
         }
         self.manager.process_player_data(agent_response_data)
        
-        print("actions",action,target_velocity)
+        # print("actions",action,target_velocity)
 
-        processed_frame_img= visualize_frame(cv_frame_data,processed_frame_data,rays,image,action)
+        processed_frame_img= multi_agent_visualize_frame(cv_frame_data,processed_frame_data,rays,image,action)
+
         self.manager.webscoket_interface.send_frame(processed_frame_img,"cvframe2")
         #return action
 
@@ -136,3 +143,18 @@ class AgentInterface:
 # }
 # action = agent.step(tag_data)
 # print("Predicted Action:", action)
+
+if __name__ == "__main__":
+    # Example usage
+    model_path = "PushBlockCollabRay.onnx"
+    agent_interface = AgentInterface(model_path)
+    # Simulate a frame data input
+    # frame_data = {
+    #     'goal_coords': [(1, 2), (2, 3)],
+    #     'wall_coords': [(0, 0), (1, 0), (1, 1), (0, 1)],
+    #     'ball_coords': (2, 2),
+    #     'bot_pos': (0, 0),
+    #     'bot_dir': 0
+    # }
+    # action = agent_interface.step(frame_data)
+    # print("Predicted Action:", action)

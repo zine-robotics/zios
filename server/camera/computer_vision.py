@@ -10,7 +10,7 @@ from enum import Enum
 
 
 class ComputerVisionManager:
-    def __init__(self, manager, config_path, width=700, height=470):
+    def __init__(self, manager, config_path, width=1700, height=870):
         # Initialize parameters
         self.width = width
         self.height = height
@@ -29,12 +29,14 @@ class ComputerVisionManager:
         # Camera object
         self.cam = None
         self.manager = manager
-        self.camera_ip= "http://192.168.137.119:8080/video"
+        self.camera_ip= "http://192.168.103.236:8080/video"
 
     def init_camera(self):
         """Initialize the camera settings."""
 
-        self.cam = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        # self.cam = cv2.VideoCapture(self.camera_ip)
+
+        self.cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
 
@@ -73,7 +75,9 @@ class ComputerVisionManager:
 
         # Update the response model
         transformed_data = process_entity_data(entity_data, M)
+        # print("Transformed Data:", transformed_data)
         self.response_model = map_to_response(transformed_data)
+        # print("Response Model:", self.response_model)
 
         return M
 
@@ -85,10 +89,10 @@ class ComputerVisionManager:
 
         while self.manager.running:
             # print("Processing frame...")
-            ret, frame = self.cam.read()
-            if not ret:
-                break
-            # frame = cv2.imread("server/camera/test_images/rlAgent.png")
+            # ret, frame = self.cam.read()
+            # if not ret:
+            #     break
+            frame = cv2.imread("server/camera/test_images/rlAgent5.png")
 
             try:
                 # Process the frame and get the transformation matrix
@@ -124,6 +128,6 @@ class ComputerVisionManager:
 
 # Example usage
 if __name__ == "__main__":
-    config_path = "./config/config2.json"  # Path to your JSON file
+    config_path = "./config/config1.json"  # Path to your JSON file
     cv_manager = ComputerVisionManager(manager=None, config_path=config_path)
     cv_manager.run()

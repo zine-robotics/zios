@@ -156,6 +156,7 @@ def categorize_entity(entity_pos):
 
     # Categorize entities
     for (entity,pos) in entity_pos:
+        # print(f"Entity: {entity}, Position: {pos}")
         if entity.entity_type in entity_categories:
             entity_categories[entity.entity_type].append((entity,np.array(pos)))
         else:
@@ -260,11 +261,14 @@ def process_boundary_and_region_data(list_of_entity_pos):
     return hull_points
 
 def map_to_response(data_entity):
+    # print("Mapping to response")
+    # print("Data Entity:", data_entity)
     response = []
     for entity_type in data_entity:
         resp_dict = {}
         if entity_type in [EntityType.OBJECT,EntityType.PLAYER] :
             for entity, pos in data_entity[entity_type]:
+                resp_dict = {}
                 resp_dict['id'] = entity.id
                 resp_dict['pose'] = pos
                 resp_dict['object_type'] = entity_type
@@ -290,6 +294,7 @@ def map_to_response(data_entity):
             resp_dict['mobility'] = 'fixed'
             resp_dict['options'] = {"boundary_points" : pos}
             response.append(resp_dict)
+    # print("Response:", response)
     
     return response
 

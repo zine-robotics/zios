@@ -23,17 +23,28 @@
   ],
   "player": [
     {
-      "aruco_id": 4,
+      "aruco_id": 2,
       "tags": "bot",
-      "id": 3
+      "id": 1
+    },
+    {
+      "aruco_id": 3,
+      "tags": "bot",
+      "id": 2
     }
   ],
   "object": [
     {
       "color": "red",
       "shape": "circle",
-      "tags": "target",
+      "tags": "target1",
       "id": 7
+    },
+    {
+      "color": "blue",
+      "shape": "circle",
+      "tags": "target2",
+      "id": 9
     }
   ],
   "region": [
@@ -41,7 +52,7 @@
       "color": "green",
       "shape": "rectangle",
       "tags": "goal",
-      "id": 7
+      "id": 10
     }
   ]
 }

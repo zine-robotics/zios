@@ -4,6 +4,7 @@ import random
 import math
 import cv2
 import time
+import numpy as np
 import asyncio
 import os
 
@@ -14,7 +15,8 @@ from ml_agent.agent_interface import AgentInterface
 from websocket_server import WebSocketServer
 
 player_ids = ["3",3]
-model_path= "server/ml_agent/PushBlock.onnx"
+single_model_path= "server/ml_agent/models/PushBlock.onnx"
+collab_model_path = "server/ml_agent/models/TwoAgentsPushBlockCollab.onnx"
 
 MAX_VELOCITY = 10
 MIN_VELOCITY = -10
@@ -124,7 +126,7 @@ class Manager:
         self.socket_interface = SocketInterface(self)
         self.serial_interface = SerialInterface(self)
         self.camera_interface = ComputerVisionManager(self, camera_config,width=700,height=470)
-        self.aget_interface =  AgentInterface(self,model_path)
+        self.aget_interface =  AgentInterface(self,collab_model_path)
         self.webscoket_interface = WebSocketServer(self)
         self.frame_const = 5
         self.frame_rate = 1
@@ -180,58 +182,71 @@ class Manager:
     
 
     def process_frame(self, response, image):
+        self.frame_rate -= 1
+        if self.frame_rate > 0:
+            return
 
-        #print(response)
-        self.frame_rate-=1
-        if(self.frame_rate<=0):
+        self.frame_rate = self.frame_const
+        self.webscoket_interface.send_frame(image, "cvframe1")
+
+        # Initialize storage with default empty values
+        data = {
+            "box1": [],
+            "box2": [],
+            "goal_coords": [],
+            "wall_coords": [],
+            "agents": []
+        }
+        # print(response)
+        # Single-pass extraction of required data
+        for obj in response:
+            tag, obj_id, pose = obj.get("tag"), obj.get("id"), obj.get("pose", [])
+
+            if tag == "target1":
+                data["box1"].append(pose[:2])
+            elif tag == "target2":
+                data["box2"].append(pose[:2])
+            elif tag == "goal":
+                data["goal_coords"] = obj.get("options", {}).get("boundary_points", [])
+            elif obj_id == "boundary":
+                data["wall_coords"] = obj.get("options", {}).get("boundary_points", [])
+            elif "bot" in tag:
+                data["agents"].append({
+                    "bot_pos": pose[:2],
+                    "bot_dir": math.degrees(pose[-1]),
+                    "bot_id": obj_id
+                })
+
+        # Check for missing required fields and print only if empty
+         # Check for missing required fields and print only if empty
+        empty_fields = {
+            key: value for key, value in data.items()
+            if isinstance(value, list) and not value  # Handle lists safely
+            or isinstance(value, np.ndarray) and value.size == 0  # Handle NumPy arrays safely
+        }
+        
+        if empty_fields:
+            print("Missing fields with empty data:")
+            for key, value in empty_fields.items():
+                print(f"{key}: {value}")
+            return
+
+        # Process each bot with the filtered agent list
+        for bot in data["agents"]:
             cv_frame_data = {
-            # 'goal_coords': [],  # Goal in front of the bot
-            # 'wall_coords': [],  # Boundary around the world
-            # 'ball_coords': (0, 0),  # Ball to the right of the bot
-            # 'bot_pos': (0, 0),
-            # 'bot_dir': 0  # Facing east (toward the goal)
+                "bot_pos": bot["bot_pos"],
+                "bot_dir": bot["bot_dir"],
+                "bot_id": bot["bot_id"],
+                "ball_coords": {"box1": data["box1"], "box2": data["box2"]},
+                "agent_coords": [a for a in data["agents"] if a["bot_id"] != bot["bot_id"]],
+                "goal_coords": data["goal_coords"],
+                "wall_coords": data["wall_coords"],
             }
-            
-        
-                # print("send frame")
-            # 
-            #     self.webscoket_interface.send_frame(image,"cvframe")
-            #     self.frame_rate=20
-            # self.frame_rate-=1
-            self.frame_rate = self.frame_const
-            self.webscoket_interface.send_frame(image,"cvframe1")
-            
-            required_fields = ["bot_pos", "bot_dir", "ball_coords", "goal_coords", "wall_coords", "bot_id" ]
-        
-            for obj in response:
-                if obj["tag"] == "bot":
-                    #print("Player Pos", obj["pose"])
-                    cv_frame_data["bot_pos"] = list((obj["pose"][:2]))
-                    cv_frame_data["bot_dir"] = float(obj["pose"][-1]*180/math.pi)
-                    cv_frame_data["bot_id"] = obj["id"]
-                    #print(obj["id"])
-                    
-                elif obj["tag"] == "target":
-                    cv_frame_data["ball_coords"] =  obj["pose"][:2]
-                    #print("target pos", obj["pose"])
+            print(cv_frame_data)
 
-                elif  obj["tag"] == 'goal':
-                    #print("goal pose" ,obj["options"]["boundary_points"])
-                    cv_frame_data["goal_coords"] = obj["options"]["boundary_points"]
-                
-                elif obj["id"] == "boundary":
-                    cv_frame_data["wall_coords"] = obj["options"]["boundary_points"]
-                    #print("boundary pos" ,obj["options"]["boundary_points"])
+            # Send data for further processing
+            self.aget_interface.step(cv_frame_data, image)
             
-            if all(key in cv_frame_data for key in required_fields):
-                self.aget_interface.step(cv_frame_data,image)
-            else:
-                pass
-                print("Invalid frame: Missing required fields ->", set(required_fields) - cv_frame_data.keys())
-            
-
-        return
-
     def run(self):
         detection_thread = threading.Thread(target=self.camera_interface.run)
         detection_thread.start()
