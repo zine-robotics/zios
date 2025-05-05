@@ -1,42 +1,70 @@
 {
-    "boundary": [
-      {
-        "color": "red",
-        "shape" : "circle",
-        "tags": "boundary1",
-        "id": 1
-      },
-      {
-        "color": "red",
-        "shape" : "circle",
-        "tags": "boundary2",
-        "id": 2
-      },
-      {
-        "color": "red",
-        "shape" : "circle",
-        "tags": "boundary3",
-        "id": 3
-      },
-      {
-        "color": "red",
-        "shape" : "circle",
-        "tags": "boundary4",
-        "id": 4
-      }
-    ],
-    "player": [
-      {
-        "color": "green",
-        "shape" : "triangle",
-        "tags": "playerA",
-        "id": 5
-      },
-      {
-        "color": "red",
-        "shape" : "triangle",
-        "tags": "playerB",
-        "id": 6
-      }
-    ]
-  }
+  "boundary": [
+    {
+      "aruco_id": 0,
+      "tags": "boundary1",
+      "id": 1
+    },
+    {
+      "aruco_id": 0,
+      "tags": "boundary2",
+      "id": 2
+    },
+    {
+      "aruco_id": 0,
+      "tags": "boundary3",
+      "id": 3
+    },
+    {
+      "aruco_id": 0,
+      "tags": "boundary3",
+      "id": 4
+    }
+  ],
+  "player": [
+    {
+      "aruco_id": 5,
+      "tags": "bot",
+      "id": 1
+    },
+    {
+      "aruco_id": 3,
+      "tags": "bot",
+      "id": 2
+    }
+  ],
+  "object": [
+    {
+      "color": "red",
+      "shape": "circle",
+      "tags": "target2",
+      "id": 7
+    },
+    {
+      "color": "red",
+      "shape": "rectangle",
+      "tags": "target1",
+      "id": 9
+    }
+  ],
+  "region": [
+    {
+      "color": "blue",
+      "shape": "rectangle",
+      "tags": "goal",
+      "id": 12
+    },
+    {
+      "color": "blue",
+      "shape": "rectangle",
+      "tags": "goal",
+      "id": 10
+    },
+    {
+      "color": "green",
+      "shape": "circle",
+      "tags": "goal",
+      "id": 11
+    }
+  ]
+}

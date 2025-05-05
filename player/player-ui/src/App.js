@@ -13,7 +13,10 @@ export default function BotController() {
   const delay = 100; // Throttle rate in milliseconds
 
   useEffect(() => {
-    socketRef.current = new WebSocket("ws://localhost:8081");
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const host = window.location.hostname || "localhost";
+    const port = "8081"; // Adjust the port if needed
+    socketRef.current = new WebSocket(`${protocol}://${host}:${port}`);
 
     socketRef.current.onopen = () => {
       setConnected(true);

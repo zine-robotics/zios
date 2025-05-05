@@ -17,7 +17,7 @@ def handle_client(client, addr):
     print(f"✅ ESP32 Connected from {addr}")
     try:
         while True:
-            data = client.recv(1024)
+            data = client.recv(1024) 
             if not data:
                 print(f"❌ ESP32 {addr} Disconnected")
                 # break

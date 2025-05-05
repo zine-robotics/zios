@@ -14,9 +14,9 @@ from camera.computer_vision import ComputerVisionManager
 from ml_agent.agent_interface import AgentInterface
 from websocket_server import WebSocketServer
 
-player_ids = ["3",3]
+player_ids = ["3",3,1,"1",2,"2"]
 single_model_path= "server/ml_agent/models/PushBlock.onnx"
-collab_model_path = "server/ml_agent/models/TwoAgentsPushBlockCollab.onnx"
+collab_model_path = "server/ml_agent/models/WallNigga.onnx"
 
 MAX_VELOCITY = 10
 MIN_VELOCITY = -10
@@ -121,14 +121,14 @@ class Manager:
             Team("red", "green_goal", [self.player_datas[3]]),
         ]
 
-        camera_config = os.path.join(os.path.dirname(__file__), "camera/config/config2.json")
+        camera_config = os.path.join(os.path.dirname(__file__), "camera/config/config3.json")
 
         self.socket_interface = SocketInterface(self)
         self.serial_interface = SerialInterface(self)
         self.camera_interface = ComputerVisionManager(self, camera_config,width=700,height=470)
         self.aget_interface =  AgentInterface(self,collab_model_path)
         self.webscoket_interface = WebSocketServer(self)
-        self.frame_const = 5
+        self.frame_const = 3
         self.frame_rate = 1
 
     def validate_response(self, response: dict):
@@ -182,7 +182,9 @@ class Manager:
     
 
     def process_frame(self, response, image):
+        # return
         self.frame_rate -= 1
+        
         if self.frame_rate > 0:
             return
 
@@ -193,9 +195,10 @@ class Manager:
         data = {
             "box1": [],
             "box2": [],
-            "goal_coords": [],
+            "goals": [],
             "wall_coords": [],
-            "agents": []
+            "agents": [],
+            # "obstacles": []
         }
         # print(response)
         # Single-pass extraction of required data
@@ -207,7 +210,10 @@ class Manager:
             elif tag == "target2":
                 data["box2"].append(pose[:2])
             elif tag == "goal":
-                data["goal_coords"] = obj.get("options", {}).get("boundary_points", [])
+                # print("goal")
+                data["goals"].append(obj.get("options", {}).get("boundary_points", []))
+            elif tag == "obstacle":
+                data["obstacles"].append(obj.get("options", {}).get("boundary_points", []))
             elif obj_id == "boundary":
                 data["wall_coords"] = obj.get("options", {}).get("boundary_points", [])
             elif "bot" in tag:
@@ -229,7 +235,7 @@ class Manager:
             print("Missing fields with empty data:")
             for key, value in empty_fields.items():
                 print(f"{key}: {value}")
-            return
+            # return
 
         # Process each bot with the filtered agent list
         for bot in data["agents"]:
@@ -239,10 +245,10 @@ class Manager:
                 "bot_id": bot["bot_id"],
                 "ball_coords": {"box1": data["box1"], "box2": data["box2"]},
                 "agent_coords": [a for a in data["agents"] if a["bot_id"] != bot["bot_id"]],
-                "goal_coords": data["goal_coords"],
+                "goals": data["goals"],
                 "wall_coords": data["wall_coords"],
             }
-            print(cv_frame_data)
+            # print(cv_frame_data)
 
             # Send data for further processing
             self.aget_interface.step(cv_frame_data, image)

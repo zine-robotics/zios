@@ -10,9 +10,13 @@ def multi_agent_visualize_frame(cv_frame_data, processed_frame, rays, image, age
         cv2.polylines(img, [walls], isClosed=True, color=(255, 0, 0), thickness=2)
 
     # Draw goal area (filled polygon)
-    if 'goal_coords' in cv_frame_data and cv_frame_data['goal_coords'].size > 0:
-        goal = np.array(cv_frame_data['goal_coords'], np.int32)
-        cv2.fillPoly(img, [goal], color=(0, 255, 0))  # Green
+    if 'goals' in cv_frame_data:
+        print("Goals:", cv_frame_data['goals'])
+        for goal_coords in cv_frame_data['goals']:
+            goal = np.array(goal_coords, np.int32)
+            cv2.fillPoly(img, [goal], color=(0, 255, 0))
+        # goal = np.array(cv_frame_data['goal_coords'], np.int32)
+        # cv2.fillPoly(img, [goal], color=(0, 255, 0))  # Green
 
    
     for box_key in ['box1', 'box2']:
@@ -85,8 +89,8 @@ def multi_agent_visualize_frame(cv_frame_data, processed_frame, rays, image, age
             start = ray.coords[0]
             end = ray.coords[1]
             hit_info = processed_frame[idx]
-            hit_tags = hit_info[:5]
-            hit_fraction = hit_info[5]
+            hit_tags = hit_info[:6]
+            hit_fraction = hit_info[6]
 
             tag_hit = np.argmax(hit_tags)
             colors = [

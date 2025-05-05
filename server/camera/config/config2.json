@@ -53,6 +53,36 @@
       "shape": "rectangle",
       "tags": "goal",
       "id": 10
+    },
+    {
+      "color": "green",
+      "shape": "rectangle",
+      "tags": "goal",
+      "id": 11
+    },
+    {
+      "color": "green",
+      "shape": "rectangle",
+      "tags": "goal",
+      "id": 12
+    },
+    {
+      "color": "green",
+      "shape": "rectangle",
+      "tags": "goal",
+      "id": 13
+    },
+    {
+      "color": "yellow",
+      "shape": "rectangle",
+      "tags": "obstacle",
+      "id": 14
+    },
+    {
+      "color": "yellow",
+      "shape": "rectangle",
+      "tags": "obstacle",
+      "id": 15
     }
   ]
 }

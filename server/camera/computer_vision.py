@@ -89,10 +89,10 @@ class ComputerVisionManager:
 
         while self.manager.running:
             # print("Processing frame...")
-            # ret, frame = self.cam.read()
-            # if not ret:
-            #     break
-            frame = cv2.imread("server/camera/test_images/rlAgent5.png")
+            ret, frame = self.cam.read()
+            if not ret:
+                break
+            # frame = cv2.imread("server/camera/test_images/rlAgent5.png")
 
             try:
                 # Process the frame and get the transformation matrix

@@ -8,10 +8,10 @@ class MultiAgentObservation:
     def __init__(self):
         self.num_rays = 37
         self.stacked_rays=3
-        self.tags_num = 5
+        self.tags_num = 6
         self.obs_shape = (self.stacked_rays, self.num_rays, self.tags_num+2)
         self.data = np.zeros(self.obs_shape, dtype=float)  
-        self.ray_length = 350.0  
+        self.ray_length = 480.0  
        
 
         self.new_frame = np.tile([0, 0, 0,0,0, 1, 1], (9, 1)).astype(float)
@@ -22,6 +22,7 @@ class MultiAgentObservation:
             "goal": 2,
             "box1":3,
             "box2":4,
+            "obstacle":6,
         }
         self.frame_fps = 30
         self.hit_threshold = 50
@@ -29,7 +30,7 @@ class MultiAgentObservation:
     def generate_rays(self, origin, angle):
         """Generate rays in an alternating order around the central angle."""
         
-        delta_angles = np.linspace(0, 360, self.num_rays, endpoint=False)  # Define full 360-degree spread
+        delta_angles = np.linspace(0,360, self.num_rays, endpoint=False)  # Define full 360-degree spread
 
         # Generate alternating order (0, -1, +1, -2, +2, ..., -n, +n)
         mid_idx = len(delta_angles) // 2
@@ -124,7 +125,7 @@ class MultiAgentObservation:
         bot_pos = frame_data['bot_pos']
         bot_dir = frame_data['bot_dir']
     
-        goal_coords = frame_data['goal_coords']
+        goals = frame_data['goals']
         box_coords = frame_data['ball_coords']
         agent_coords = frame_data['agent_coords']
         agent_coords = [agent["bot_pos"] for agent in agent_coords]
@@ -135,8 +136,11 @@ class MultiAgentObservation:
         self.object_hit(box_coords['box1'], self.tag_index_map['box1'], bot_pos)
         self.object_hit(box_coords['box2'], self.tag_index_map['box2'], bot_pos)
         self.object_hit(agent_coords, self.tag_index_map['agent'], bot_pos)
-       
-        self.polygon_hit(goal_coords, self.tag_index_map['goal'], bot_pos)
+        for goal in goals:
+            # print("goal",len(goals))
+            self.polygon_hit(goal, self.tag_index_map['goal'], bot_pos)
+           
+        
 
         self.wall_hit(frame_width, frame_height, bot_pos)
 

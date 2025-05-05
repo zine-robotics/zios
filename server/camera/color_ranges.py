@@ -13,10 +13,10 @@ COLOR_RANGES = {
         (np.array([100, 50, 50]), np.array([130, 255, 255])),
     ],
     "green": [
-        (np.array([40, 50, 50]), np.array([80, 255, 255]))
+        (np.array([40, 50, 50]), np.array([90, 255, 255]))  # Extended to include light green
     ],
     "yellow": [
-        (np.array([20, 100, 100]), np.array([30, 255, 255]))
+        (np.array([15, 100, 100]), np.array([35, 255, 255]))  # Wider yellow range
     ],
     "cyan": [
         (np.array([80, 100, 100]), np.array([90, 255, 255]))
@@ -35,5 +35,8 @@ COLOR_RANGES = {
     ],
     "white": [
         (np.array([0, 0, 200]), np.array([180, 30, 255]))
+    ],
+    "pink": [
+        (np.array([150, 50, 50]), np.array([170, 255, 255]))
     ]
 }

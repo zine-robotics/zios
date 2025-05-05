@@ -18,7 +18,7 @@ class Observation:
             "wall": 2
         }
         self.frame_fps = 30
-        self.hit_threshold = 50
+        self.hit_threshold =60
 
     def generate_rays(self, origin, angle):
         """Generate rays in an alternating order around the central angle."""

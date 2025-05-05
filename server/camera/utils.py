@@ -34,6 +34,7 @@ def detect_shapes_and_colors(image):
                 elif num_vertices == 3:
                     shape = "triangle"
                 elif num_vertices == 4:
+                    #  print("rectangle",color_name)
                      shape = "rectangle"
                 elif num_vertices == 2:
                     shape = "line"
@@ -278,6 +279,7 @@ def map_to_response(data_entity):
                 response.append(resp_dict)
         elif entity_type in [EntityType.REGION] :
             for entity, pos in data_entity[entity_type]:
+                resp_dict = {}
                 resp_dict['id'] = entity.id
                 resp_dict['pose'] = np.zeros(6)
                 resp_dict['object_type'] = entity_type
@@ -286,6 +288,7 @@ def map_to_response(data_entity):
                 resp_dict['options'] = {"boundary_points" : pos}
                 response.append(resp_dict)
         else:
+            resp_dict = {}
             pos = data_entity[entity_type]
             resp_dict['id'] = 'boundary'
             resp_dict['pose'] = np.zeros(6)

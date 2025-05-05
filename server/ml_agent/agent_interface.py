@@ -22,7 +22,7 @@ class AgentInterface:
        # self.agent_observation = Observation()
         self.agent_observation = MultiAgentObservation()
         #input_shape = (3, 7, 5)
-        self.input_shape = (3,37,7)
+        self.input_shape = (3,37,8)
 
     def preprocess_observation(self, ray_data):
         """
@@ -127,9 +127,9 @@ class AgentInterface:
        
         # print("actions",action,target_velocity)
 
-        processed_frame_img= multi_agent_visualize_frame(cv_frame_data,processed_frame_data,rays,image,action)
+        # processed_frame_img= multi_agent_visualize_frame(cv_frame_data,processed_frame_data,rays,image,action)
 
-        self.manager.webscoket_interface.send_frame(processed_frame_img,"cvframe2")
+        # self.manager.webscoket_interface.send_frame(processed_frame_img,"cvframe2")
         #return action
 
 # Example usage:
